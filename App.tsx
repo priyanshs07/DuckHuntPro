@@ -13,6 +13,7 @@ const App = () => {
   // Progression
   const [level, setLevel] = useState(1);
   const [round, setRound] = useState(1);
+  const [winCountdown, setWinCountdown] = useState(3);
   
   // Stats
   const [levelAccumulatedStats, setLevelAccumulatedStats] = useState({ killed: 0, shots: 0, totalBirds: 0 });
@@ -332,6 +333,32 @@ const App = () => {
      setGameState(GameState.HOME);
   }
 
+  // --- Effects for Round Win Countdown ---
+  useEffect(() => {
+    let interval: number;
+    if (gameState === GameState.ROUND_WIN) {
+      setWinCountdown(3);
+      interval = window.setInterval(() => {
+        setWinCountdown((prev) => {
+          if (prev <= 0) return 0; // Stop at 0
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [gameState]);
+
+  useEffect(() => {
+    if (gameState === GameState.ROUND_WIN && winCountdown === 0) {
+        // Wait 1 second on "GET READY" then start
+        const t = setTimeout(() => {
+            handleNextRound();
+        }, 1000);
+        return () => clearTimeout(t);
+    }
+  }, [gameState, winCountdown]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
   // --- Render Functions ---
 
   const renderToast = () => (
@@ -434,10 +461,11 @@ const App = () => {
          style={{ left: `${crosshairPos.x}%`, top: `${crosshairPos.y}%`, transform: 'translate(-50%, -50%)' }}
        >
          <div className="relative">
-            <div className="w-12 h-12 border-2 border-red-500 rounded-full flex items-center justify-center">
-               <div className="w-0.5 h-full bg-red-500/50"></div>
-               <div className="h-0.5 w-full bg-red-500/50 absolute"></div>
-               <div className="w-2 h-2 bg-red-500 rounded-full z-10"></div>
+            {/* Improved Crosshair Shape */}
+            <div className="w-12 h-12 border-2 border-red-500 rounded-full shadow-[0_0_5px_rgba(255,0,0,0.5)] relative">
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-0.5 bg-red-500/80"></div>
+               <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full h-0.5 bg-red-500/80"></div>
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_2px_#fff] z-10"></div>
             </div>
             
             {showHitMarker && (
@@ -481,28 +509,38 @@ const App = () => {
 
   // --- End Screens ---
 
-  // 1. Round Win (Toast-like Modal)
+  // 1. Round Win (Countdown Modal)
   const renderRoundWin = () => {
     const accuracy = shotsFired > 0 ? Math.round((birdsKilled / shotsFired) * 100) : 0;
+    const bonus = (birdsKilled * 100) + ((levelConfigRef.current.totalAmmo - shotsFired) * 50);
+
     return (
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-in fade-in zoom-in duration-300">
-         <div className="bg-parchment/95 backdrop-blur border-4 border-western-gold p-6 shadow-2xl rounded-lg text-center min-w-[300px] transform -rotate-2">
+         <div className="bg-parchment/95 backdrop-blur border-4 border-western-gold p-8 shadow-2xl rounded-lg text-center min-w-[320px] transform -rotate-2">
             <h2 className="text-3xl font-western text-dust-brown mb-2">ROUND {round} CLEAR!</h2>
             
-            <div className="flex justify-around my-4 border-y border-dust-brown/20 py-2">
+            <div className="flex justify-around my-6 border-y border-dust-brown/20 py-4">
               <div className="flex flex-col">
                 <span className="text-xs font-mono text-dust-brown/70">ACCURACY</span>
                 <span className="text-xl font-bold text-sunset-red">{accuracy}%</span>
               </div>
               <div className="flex flex-col">
                  <span className="text-xs font-mono text-dust-brown/70">BONUS</span>
-                 <span className="text-xl font-bold text-sunset-red">${(birdsKilled * 100) + ((levelConfigRef.current.totalAmmo - shotsFired) * 50)}</span>
+                 <span className="text-xl font-bold text-sunset-red">${bonus}</span>
               </div>
             </div>
 
-            <Button onClick={handleNextRound} variant="primary" size="md" className="w-full">
-               NEXT ROUND <Play size={18} className="inline ml-2" />
-            </Button>
+            <div className="mt-4 flex flex-col items-center justify-center min-h-[60px]">
+                {winCountdown > 0 ? (
+                    <div className="text-dust-brown font-mono text-lg animate-pulse">
+                        NEXT ROUND IN <span className="text-3xl font-bold text-sunset-red block">{winCountdown}</span>
+                    </div>
+                ) : (
+                    <div className="text-3xl font-western text-sunset-red animate-bounce tracking-widest">
+                        GET READY!
+                    </div>
+                )}
+            </div>
          </div>
       </div>
     );
@@ -558,8 +596,12 @@ const App = () => {
           <div className="bg-gunmetal border-4 border-sunset-red p-8 rounded shadow-2xl text-center max-w-md w-full">
              <Skull size={48} className="text-sunset-red mx-auto mb-4 animate-pulse" />
              <h2 className="text-4xl font-western text-white mb-2 tracking-widest">ROUND FAILED</h2>
-             <p className="font-mono text-gray-400 mb-6 uppercase">
+             <p className="font-mono text-gray-400 mb-2 uppercase">
                 {birdsEscaped > 0 ? "Prey Escaped" : "Out of Ammo"}
+             </p>
+
+             <p className="text-xl font-western text-western-gold mb-6 border-b border-white/10 pb-4">
+                You bagged {birdsKilled} of {levelConfigRef.current.totalBirds} required
              </p>
 
              {/* Stats Summary */}
@@ -576,7 +618,7 @@ const App = () => {
 
              <div className="flex flex-col gap-3">
                <Button onClick={handleRetryRound} variant="primary" className="flex items-center justify-center gap-2">
-                  <MonitorPlay size={20} /> RETRY (WATCH AD)
+                  <MonitorPlay size={20} /> RETRY
                </Button>
                <Button onClick={handleGiveUp} variant="secondary">
                   GIVE UP

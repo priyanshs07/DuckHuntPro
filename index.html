@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <title>Duck Hunt: Showdown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Rye&family=Sancreek&family=Share+Tech+Mono&display=swap');
+      
+      body {
+        background-color: #1a1a1a;
+        color: #fff;
+        overflow: hidden;
+        touch-action: none;
+      }
+      
+      /* Old Film Grain effect */
+      .grain {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        z-index: 50;
+        opacity: 0.4;
+      }
+
+      .vignette {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
+        pointer-events: none;
+        z-index: 49;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"Share Tech Mono"', 'monospace'],
+              display: ['"Rye"', 'serif'],
+              western: ['"Sancreek"', 'serif'],
+            },
+            colors: {
+              'western-gold': '#ffb300',
+              'sunset-red': '#c0392b',
+              'cactus-green': '#2e7d32',
+              'dust-brown': '#5d4037',
+              'sky-blue': '#87ceeb',
+              'gunmetal': '#263238',
+              'parchment': '#f4eacb',
+            },
+            boxShadow: {
+              'retro': '4px 4px 0px 0px rgba(0,0,0,0.5)',
+              'retro-gold': '4px 4px 0px 0px #ffb300',
+            },
+            backgroundImage: {
+              'wood-pattern': "url('https://www.transparenttextures.com/patterns/wood-pattern.png')",
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
